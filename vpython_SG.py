@@ -12,20 +12,23 @@ def dados_simul():
     dx = RK4(lambda x, u: A@x + B@u)
     dx_est = RK4(lambda x_est, u: A@x_est + B@u + L@(y-y_est))
 
-    m1=2.0; m2=1.0; k1=10.0; k2=10.0; b1=0; b2=1.0
-    A = np.array([[0,0,1,0],
-                  [0,0,0,1],
-                  [-(k1+k2)/m1,k2/m1,-(b1+b2)/m1,b2/m1],
-                  [k2/m2,-k2/m2,b2/m2,-b2/m2]])
-    B = np.array([[0],[0],[1/m1],[0]])
-    C = np.array([[0,1,0,0]])
+    m1=2.0; m2=1.0; m3=1.0; k1=10.0; k2=10.0; k3=10.0; b1=0; b2=1.0; b3=1.0
+    A = np.array([[0,1,0,0,0,0],
+                  [-(k1+k2)/m1,-(b1+b2)/m1,k2/m1,b2/m1,0,0],
+                  [0,0,0,1,0,0],
+                  #[1,0,0,0,0,0],
+                  [k2/m2,b2/m2,-(k2+k3)/m2,-(b2+b3)/m2,k3/m2,b3/m2],
+                  [0,0,0,0,0,1],
+                  [0,0,k3/m3,b3/m3,-k3/m3,-b3/m3]])
+    B = np.array([[0],[1/m1],[0],[0],[0],[0]])
+    C = np.array([[0,1,0,0,0,0]])
     D = np.array([[0]])
-    K = np.array([[105.92,-64.72,29,17.08]])
-    N = np.array([[51.2]])
-    L = np.array([[143.6],[30.5],[142.9],[318.3]])
+    K = np.array([[1,1,1,1,1,1]])
+    N = np.array([[1]])
+    L = np.array([[1],[1],[1],[1],[1],[1]])
 
-    t, tf, dt, u, x, r = 0, 5, .01, np.array([[0]]), np.array([[0.5],[1],[0],[0]]), np.array([[.5]])
-    x_est = np.array([[0],[0],[0],[0]])
+    t, tf, dt, u, x, r = 0, 5, .01, np.array([[15]]), np.array([[5],[0],[10],[0],[15],[0]]), np.array([[.5]])
+    x_est = np.array([[0],[0],[0],[0],[0],[0]])
     X, U, T = x, u, t
 
     for i in range(int((tf-t)/dt)):
@@ -73,11 +76,14 @@ def inicializa():
     dir2 = -dir1
     forca1 = arrow(pos=vector(0,tam_cubo,0),axis=dir1,color=color.green)
     forca2 = arrow(pos=vector(0,tam_cubo,0),axis=dir1,color=color.red)
-    mola1 = helix(vector=dir,thickness=.2,color=color.blue)
-    mola2 = helix(vector=dir,thickness=.2,color=color.blue)
+    forca3 = arrow(pos=vector(0,tam_cubo,0),axis=dir1,color=color.blue)
+    mola1 = helix(vector=dir,thickness=.2,color=color.purple)
+    mola2 = helix(vector=dir,thickness=.2,color=color.purple)
+    mola3 = helix(vector=dir,thickness=.2,color=color.purple)
     arrow(axis=vector(tam_eixo,0,0),color=color.red), arrow(axis=vector(0,tam_eixo,0),color=color.green), arrow(axis=vector(0,0,tam_eixo),color=color.blue)
     massa1=box(opacity=.5,size=2*tam_cubo*vec(1,1,1),color=color.green)
     massa2=box(opacity=.5,size=2*tam_cubo*vec(1,1,1),color=color.red)
+    massa3=box(opacity=.5,size=2*tam_cubo*vec(1,1,1),color=color.blue)
     chao= box(pos=vec(15,-(tam_cubo+esp_chao),0),size=vec(30,2*esp_chao,2*tam_cubo),color=vec(.8, .8, .8))
     graf1 = graph(title='Posição', width=600, height=300,xtitle='<i>t</i> (s)', ytitle='<i>x</i><sub>1</sub> (m)    <i>x</i><sub>2</sub> (m)',
                   fast=True,xmin=T.min(),xmax=T.max())
@@ -85,7 +91,7 @@ def inicializa():
                   fast=True,xmin=T.min(),xmax=T.max())
     graf3 = graph(title='Velocidade', width=600, height=300,xtitle='<i>t</i> (s)', ytitle='<i>v</i><sub>1</sub> (m/s)    <i>v</i><sub>2</sub> (m/s)',
                   fast=True,xmin=T.min(),xmax=T.max())
-    return (forca1,forca2,mola1,mola2,massa1,massa2,gcurve(graph=graf1,color=color.green), gcurve(graph=graf1,color=color.red),
+    return (forca1,forca2,forca3,mola1,mola2,mola3,massa1,massa2,massa3,gcurve(graph=graf1,color=color.green), gcurve(graph=graf1,color=color.red),
             gcurve(graph=graf2,color=color.green), gcurve(graph=graf2,color=color.red),
             gcurve(graph=graf3,color=color.green), gcurve(graph=graf3,color=color.red),
             tam_cubo,tam_mola)
@@ -93,7 +99,7 @@ def inicializa():
 def move():
     delta_f = lambda x: 0 if x<0 else 2*tam_cubo
     gx1.delete(), gx2.delete(), gf1.delete(), gf2.delete(), gv1.delete(), gv2.delete()
-    x1, x2, v1, v2 = X[0]+tam_mola, X[1]+2*(tam_mola+tam_cubo), X[2], X[3]
+    x1, x2, x3, v1, v2, v3 = X[0]+tam_mola, X[2]+2*(tam_mola+tam_cubo), X[3]+2*(tam_mola+tam_cubo), X[1], X[4], X[5]
     disp_rate = 1/(T[1]-T[0])
 
     for i in range(len(T)):
@@ -102,6 +108,8 @@ def move():
         massa1.pos.x = x1[i]+tam_cubo
         mola2.pos.x, mola2.axis.x = x1[i]+2*tam_cubo, x2[i]-x1[i]-2*tam_cubo
         massa2.pos.x = x2[i]+tam_cubo
+        mola3.pos.x, mola3.axis.x = x2[i]+2*tam_cubo, x3[i]-x2[i]-2*tam_cubo
+        massa3.pos.x = x3[i]
         forca1.pos.x, forca1.axis.x = x1[i]+delta_f(f1[i]), f1[i]/2
         forca2.pos.x, forca2.axis.x = x2[i]+delta_f(f2[i]), f2[i]/2
         gx1.plot(T[i],X[0][i]), gx2.plot(T[i],X[1][i])
@@ -111,7 +119,7 @@ def move():
 
 T,X,f1,f2 = dados_simul()
 imprime()
-forca1,forca2,mola1,mola2,massa1,massa2,gx1,gx2,gf1,gf2,gv1,gv2,tam_cubo,tam_mola = inicializa()
+forca1,forca2,forca3,mola1,mola2,mola3,massa1,massa2,massa3,gx1,gx2,gf1,gf2,gv1,gv2,tam_cubo,tam_mola = inicializa()
 from time import sleep
 sleep(3)
 move()
